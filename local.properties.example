@@ -1,0 +1,9 @@
+# ── local.properties.example ──
+# Copy to local.properties and fill in your secrets.
+# NEVER commit local.properties to git.
+
+sdk.dir=/path/to/android/sdk
+
+# HMAC secrets — must match the keys in odin-criar-cartao.html
+HUGINN_QR_HMAC_KEY=SRBR_HUGINN_ODIN_SECRET_2024
+HUGINN_TOKEN_HMAC_KEY=SRBR_HEIMDALL_TOKEN_SECRET_2024
