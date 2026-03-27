@@ -19,19 +19,17 @@ import com.srbr.huginn.ui.theme.*
 
 @Composable
 fun OnboardingScreen(
-    onRegistered:    () -> Unit,
+    onRegistered:    (systemId: String) -> Unit,
     onRequestCamera: (onQRDetected: (String) -> Unit, onPermissionDenied: () -> Unit, onUnavailable: () -> Unit) -> Unit,
     onStopCamera:    () -> Unit,
     viewModel: OnboardingViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
-    // Navigate when card saved
     LaunchedEffect(state.step) {
         if (state.step is OnboardingStep.Success) {
-            // Delay for animation, then navigate
             kotlinx.coroutines.delay(2000)
-            onRegistered()
+            onRegistered((state.step as OnboardingStep.Success).card.systemId)
         }
     }
 

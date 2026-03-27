@@ -1,5 +1,6 @@
 package com.srbr.huginn.feature.card
 
+import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
 import com.srbr.huginn.core.security.DeviceIdentity
 import com.srbr.huginn.core.security.HuginnCard
@@ -17,7 +18,8 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class CardViewModelTest {
 
-    private val testDispatcher = StandardTestDispatcher()
+    private val testDispatcher    = StandardTestDispatcher()
+    private val savedStateHandle  = SavedStateHandle(mapOf("systemId" to "SRBR_EXIT"))
     private lateinit var repository:     CardRepository
     private lateinit var deviceIdentity: DeviceIdentity
     private lateinit var viewModel:      CardViewModel
@@ -40,12 +42,12 @@ class CardViewModelTest {
         repository     = mockk(relaxed = true)
         deviceIdentity = mockk(relaxed = true)
 
-        every { repository.getCard() }    returns fakeCard
-        every { repository.hasCard() }    returns true
+        every { repository.getCard(any()) } returns fakeCard
+        every { repository.hasCard() }      returns true
         every { deviceIdentity.getDeviceId() }  returns "ABCD1234EFGH5678"
         every { deviceIdentity.getDisplayId() } returns "SRBR-ABCD-1234"
 
-        viewModel = CardViewModel(repository, deviceIdentity)
+        viewModel = CardViewModel(repository, deviceIdentity, savedStateHandle)
     }
 
     @After

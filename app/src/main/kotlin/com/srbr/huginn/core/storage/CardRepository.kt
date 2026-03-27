@@ -6,17 +6,19 @@ import javax.inject.Singleton
 
 /**
  * Repository layer — sits between ViewModels and CardStorage.
- * This abstraction makes ViewModels fully unit-testable
- * by allowing CardRepository to be mocked in tests.
+ * Supports multiple credentials (one per systemId).
+ * This abstraction makes ViewModels fully unit-testable.
  */
 @Singleton
 class CardRepository @Inject constructor(
     private val storage: CardStorage
 ) {
-    fun getCard(): HuginnCard? = storage.loadCard()
-    fun hasCard(): Boolean     = storage.hasCard()
-    fun saveCard(card: HuginnCard) = storage.saveCard(card)
-    fun deleteCard()           = storage.deleteCard()
-    fun isNonceUsed(nonce: String)  = storage.isNonceUsed(nonce)
-    fun markNonceUsed(nonce: String) = storage.markNonceUsed(nonce)
+    fun getCards(): List<HuginnCard>       = storage.loadCards()
+    fun getCard(systemId: String): HuginnCard? = storage.loadCard(systemId)
+    fun hasCard(): Boolean                 = storage.hasCards()
+    fun saveCard(card: HuginnCard)         = storage.saveCard(card)
+    fun deleteCard(systemId: String)       = storage.deleteCard(systemId)
+    fun deleteAllCards()                   = storage.deleteAllCards()
+    fun isNonceUsed(nonce: String)         = storage.isNonceUsed(nonce)
+    fun markNonceUsed(nonce: String)       = storage.markNonceUsed(nonce)
 }

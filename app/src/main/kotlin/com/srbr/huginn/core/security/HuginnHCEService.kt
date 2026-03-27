@@ -41,7 +41,11 @@ class HuginnHCEService : HostApduService() {
     }
 
     override fun onDeactivated(reason: Int) {
-        Log.d(TAG, "HCE deactivated: $reason")
+        // reason 0 = DEACTIVATION_LINK_LOSS  (field removed)
+        // reason 1 = DEACTIVATION_DESELECTED (reader selected different AID)
+        // reason 2 = DEACTIVATION_OBSERVE_MODE (API 34+ — another service taking priority;
+        //            re-activation may follow in the same session, keep authorization intact)
+        Log.d(TAG, "HCE deactivated: reason=$reason${if (reason == 2) " (observe mode)" else ""}")
     }
 
     override fun onDestroy() {
