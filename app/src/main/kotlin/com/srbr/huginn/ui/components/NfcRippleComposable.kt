@@ -21,13 +21,12 @@ fun NfcRipple(
 ) {
     if (!visible) return
 
-    // Each ring gets its own infinite transition
-    val transitions = List(RING_COUNT) { rememberInfiniteTransition(label = "ripple$it") }
-    val progresses  = transitions.mapIndexed { i, transition ->
+    val transition = rememberInfiniteTransition(label = "ripple")
+    val progresses = List(RING_COUNT) { i ->
         transition.animateFloat(
-            initialValue   = 0f,
-            targetValue    = 1f,
-            animationSpec  = infiniteRepeatable(
+            initialValue  = 0f,
+            targetValue   = 1f,
+            animationSpec = infiniteRepeatable(
                 animation  = tween(durationMillis = 2400, easing = LinearEasing),
                 repeatMode = RepeatMode.Restart,
                 initialStartOffset = StartOffset(i * 800)
