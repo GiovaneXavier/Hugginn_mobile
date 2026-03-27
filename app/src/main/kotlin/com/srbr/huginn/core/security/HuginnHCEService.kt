@@ -44,6 +44,14 @@ class HuginnHCEService : HostApduService() {
         Log.d(TAG, "HCE deactivated: $reason")
     }
 
+    override fun onDestroy() {
+        isAuthorized = false
+        authorizedUntil = 0L
+        activeCard = null
+        deviceId = ""
+        super.onDestroy()
+    }
+
     private fun ByteArray.startsWith(prefix: ByteArray): Boolean {
         if (size < prefix.size) return false
         return prefix.indices.all { this[it] == prefix[it] }
