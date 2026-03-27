@@ -22,8 +22,4 @@ object AppModule {
     @Named("qrHmacKey")
     fun provideQrHmacKey(): String = BuildConfig.QR_HMAC_KEY
 
-    @Provides
-    @Singleton
-    @Named("tokenHmacKey")
-    fun provideTokenHmacKey(): String = BuildConfig.TOKEN_HMAC_KEY
 }

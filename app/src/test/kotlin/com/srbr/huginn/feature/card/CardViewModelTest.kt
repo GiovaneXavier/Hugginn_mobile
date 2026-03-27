@@ -1,11 +1,10 @@
-package com.srbr.huginn
+package com.srbr.huginn.feature.card
 
 import app.cash.turbine.test
 import com.srbr.huginn.core.security.DeviceIdentity
 import com.srbr.huginn.core.security.HuginnCard
 import com.srbr.huginn.core.security.HuginnHCEService
 import com.srbr.huginn.core.storage.CardRepository
-import com.srbr.huginn.feature.card.CardViewModel
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -69,7 +68,7 @@ class CardViewModelTest {
     @Test
     fun `onBiometricSuccess sets isUnlocked true`() = runTest {
         viewModel.state.test {
-            awaitItem() // initial state
+            awaitItem()
             viewModel.onBiometricSuccess()
             val unlocked = awaitItem()
             assertTrue(unlocked.isUnlocked)
@@ -91,7 +90,7 @@ class CardViewModelTest {
         viewModel.state.test {
             awaitItem()
             viewModel.onBiometricSuccess()
-            awaitItem() // unlocked
+            awaitItem()
             viewModel.onExpire()
             val locked = awaitItem()
             assertFalse(locked.isUnlocked)
@@ -132,7 +131,6 @@ class CardViewModelTest {
             viewModel.onBiometricSuccess()
             awaitItem()
 
-            // Fast-forward 30+ seconds
             testDispatcher.scheduler.advanceTimeBy(31_000)
             val expired = expectMostRecentItem()
             assertFalse(expired.isUnlocked)
