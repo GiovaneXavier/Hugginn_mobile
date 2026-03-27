@@ -1,0 +1,20 @@
+{
+    "logs": [
+        {
+            "outputFile": "com.srbr.huginn.app-mergeDebugResources-66:/values-hdpi-v4/values-hdpi-v4.xml",
+            "map": [
+                {
+                    "source": "C:\\Users\\giova\\.gradle\\caches\\transforms-3\\e07b03242afef551e700fd39c85bb3d3\\transformed\\appcompat-1.6.1\\res\\values-hdpi-v4\\values-hdpi-v4.xml",
+                    "from": {
+                        "startLines": "2",
+                        "startColumns": "4",
+                        "startOffsets": "55",
+                        "endLines": "6",
+                        "endColumns": "13",
+                        "endOffsets": "327"
+                    }
+                }
+            ]
+        }
+    ]
+}
