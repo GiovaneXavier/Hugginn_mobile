@@ -20,8 +20,10 @@ class HuginnHCEService : HostApduService() {
         @JvmStatic @Volatile var activeDeviceId:  String      = ""
     }
 
+    private val tokenGenerator = NfcTokenGenerator()
+
     override fun processCommandApdu(commandApdu: ByteArray, extras: Bundle?): ByteArray {
-        if (commandApdu == null || !commandApdu.startsWith(SELECT_HEADER)) return SW_UNKNOWN
+        if (!commandApdu.startsWith(SELECT_HEADER)) return SW_UNKNOWN
 
         val now = System.currentTimeMillis()
         val currentCard = activeCard
@@ -34,7 +36,7 @@ class HuginnHCEService : HostApduService() {
         }
 
         return try {
-            val token = NfcTokenGenerator().generate(currentCard, devId)
+            val token = tokenGenerator.generate(currentCard, devId)
             Log.d(TAG, "Sending signed token")
             token.toByteArray(Charsets.UTF_8) + SW_OK
         } catch (e: Exception) {
@@ -44,7 +46,11 @@ class HuginnHCEService : HostApduService() {
     }
 
     override fun onDeactivated(reason: Int) {
-        Log.d(TAG, "HCE deactivated: reason=$reason")
+        // reason 0 = DEACTIVATION_LINK_LOSS  (field removed)
+        // reason 1 = DEACTIVATION_DESELECTED (reader selected different AID)
+        // reason 2 = DEACTIVATION_OBSERVE_MODE (API 34+) — another service taking priority;
+        //            re-activation may follow in the same session, keep authorization intact
+        Log.d(TAG, "HCE deactivated: reason=$reason${if (reason == 2) " (observe mode)" else ""}")
     }
 
     override fun onDestroy() {
