@@ -1,8 +1,8 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
-    id 'com.google.dagger.hilt.android'
     id 'kotlin-kapt'
+    id 'com.google.dagger.hilt.android'
     id 'org.jetbrains.kotlin.plugin.compose'
 }
 
@@ -19,10 +19,6 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        // ── Secrets injected at build time — never hardcode in source ──
-        // Set these in local.properties or CI/CD environment variables:
-        //   HUGINN_QR_HMAC_KEY=your_secret
-        //   HUGINN_TOKEN_HMAC_KEY=your_secret
         buildConfigField "String", "QR_HMAC_KEY",
             "\"${project.findProperty('HUGINN_QR_HMAC_KEY') ?: 'SRBR_HUGINN_ODIN_SECRET_2024'}\""
         buildConfigField "String", "TOKEN_HMAC_KEY",
@@ -33,7 +29,6 @@ android {
         compose true
         buildConfig true
     }
-
 
     buildTypes {
         debug {
@@ -68,7 +63,9 @@ dependencies {
     // ── Core ──
     implementation 'androidx.core:core-ktx:1.12.0'
     implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'com.google.android.material:material:1.11.0'
     implementation 'androidx.lifecycle:lifecycle-runtime-ktx:2.7.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.7.0'
     implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0'
 
     // ── Compose ──
@@ -86,8 +83,8 @@ dependencies {
     debugImplementation 'androidx.compose.ui:ui-tooling'
 
     // ── Hilt DI ──
-    implementation 'com.google.dagger:hilt-android:2.50'
-    kapt 'com.google.dagger:hilt-compiler:2.50'
+    implementation 'com.google.dagger:hilt-android:2.52'
+    kapt 'com.google.dagger:hilt-android-compiler:2.52'
     implementation 'androidx.hilt:hilt-navigation-compose:1.1.0'
 
     // ── Biometric ──
@@ -95,9 +92,6 @@ dependencies {
 
     // ── Encrypted Storage ──
     implementation 'androidx.security:security-crypto:1.1.0-alpha06'
-
-    // ── NFC / HCE ──
-    // Built into Android SDK — no extra dependency needed
 
     // ── CameraX ──
     implementation 'androidx.camera:camera-core:1.3.1'
