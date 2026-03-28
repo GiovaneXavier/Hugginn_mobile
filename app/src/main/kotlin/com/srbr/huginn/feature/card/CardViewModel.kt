@@ -8,6 +8,7 @@ import com.srbr.huginn.core.security.HuginnCard
 import com.srbr.huginn.core.security.HuginnHCEService
 import com.srbr.huginn.core.storage.CardRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,9 +40,11 @@ class CardViewModel @Inject constructor(
     private var countdownJob: Job? = null
     private val AUTH_WINDOW_SECS = 30
 
-    init { loadCard() }
+    init {
+        viewModelScope.launch(Dispatchers.IO) { loadCard() }
+    }
 
-    private fun loadCard() {
+    private suspend fun loadCard() {
         val systemId = savedStateHandle.get<String>("systemId") ?: return
         val card = repository.getCard(systemId)
         _state.update {
