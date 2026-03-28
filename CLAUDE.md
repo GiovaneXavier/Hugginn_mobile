@@ -131,7 +131,7 @@ NavGraph.kt        → Compose Navigation; passa callbacks de câmera/biometria
 | `requireDeviceUnlock="true"` no apduservice.xml | NFC HCE só responde com dispositivo desbloqueado |
 | `NfcTokenGenerator` extraído de `HuginnHCEService` | Testabilidade; HuginnHCEService usa Android framework, não testável em unit tests |
 | `hasCard()` = `contains(KEY) && loadCard() != null` | Evita falso-positivo se a chave existe mas a deserialização falha |
-| `deleteCard()` remove também `KEY_NONCES` | Evita vazamento de nonces de credenciais anteriores |
+| `deleteAllCards()` remove `KEY_NONCES`; `deleteCard(systemId)` não remove | Multi-card: nonces são globais — remover ao apagar um card invalidaria rastreamento dos outros |
 
 ## Formato do Token NFC
 
