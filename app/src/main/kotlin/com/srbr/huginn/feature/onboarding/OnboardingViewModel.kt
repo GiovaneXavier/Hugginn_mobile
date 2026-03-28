@@ -23,7 +23,7 @@ sealed class OnboardingStep {
     object Scanning   : OnboardingStep()
     object Validating : OnboardingStep()
     data class Error(val title: String, val message: String) : OnboardingStep()
-    data class Success(val card: HuginnCard, val displayId: String) : OnboardingStep()
+    data class Success(val card: HuginnCard, val displayId: String, val totalCards: Int) : OnboardingStep()
 }
 
 data class OnboardingUiState(
@@ -100,8 +100,9 @@ class OnboardingViewModel @Inject constructor(
 
                     repository.markNonceUsed(card.nonce)
                     repository.saveCard(card)
+                    val totalCards = withContext(Dispatchers.IO) { repository.getCards().size }
 
-                    _state.update { it.copy(step = OnboardingStep.Success(card, deviceIdentity.getDisplayId())) }
+                    _state.update { it.copy(step = OnboardingStep.Success(card, deviceIdentity.getDisplayId(), totalCards)) }
                 }
             }
         }

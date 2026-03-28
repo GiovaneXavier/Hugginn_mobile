@@ -19,7 +19,7 @@ import com.srbr.huginn.ui.theme.*
 
 @Composable
 fun OnboardingScreen(
-    onRegistered:    (systemId: String) -> Unit,
+    onRegistered:    (systemId: String, totalCards: Int) -> Unit,
     onRequestCamera: (onQRDetected: (String) -> Unit, onPermissionDenied: () -> Unit, onUnavailable: () -> Unit) -> Unit,
     onStopCamera:    () -> Unit,
     viewModel: OnboardingViewModel = hiltViewModel()
@@ -28,8 +28,9 @@ fun OnboardingScreen(
 
     LaunchedEffect(state.step) {
         if (state.step is OnboardingStep.Success) {
+            val step = state.step as OnboardingStep.Success
             kotlinx.coroutines.delay(2000)
-            onRegistered((state.step as OnboardingStep.Success).card.systemId)
+            onRegistered(step.card.systemId, step.totalCards)
         }
     }
 

@@ -35,8 +35,9 @@ fun HuginnNavGraph(
     ) {
         composable(Routes.ONBOARDING) {
             OnboardingScreen(
-                onRegistered = { systemId ->
-                    navController.navigate(Routes.card(systemId)) {
+                onRegistered = { systemId, totalCards ->
+                    val destination = if (totalCards > 1) Routes.CARD_LIST else Routes.card(systemId)
+                    navController.navigate(destination) {
                         popUpTo(Routes.ONBOARDING) { inclusive = true }
                     }
                 },

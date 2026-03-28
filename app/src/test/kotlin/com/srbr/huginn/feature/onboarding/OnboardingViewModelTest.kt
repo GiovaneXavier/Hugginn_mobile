@@ -5,6 +5,7 @@ import com.srbr.huginn.core.security.DeviceIdentity
 import com.srbr.huginn.core.security.HuginnCard
 import com.srbr.huginn.core.security.QRValidator
 import com.srbr.huginn.core.storage.CardRepository
+import androidx.lifecycle.SavedStateHandle
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -37,7 +38,8 @@ class OnboardingViewModelTest {
         repository     = mockk(relaxed = true)
         deviceIdentity = mockk(relaxed = true)
         every { deviceIdentity.getDisplayId() } returns "SRBR-ABCD-1234"
-        viewModel = OnboardingViewModel(qrValidator, repository, deviceIdentity)
+        every { repository.getCards() } returns emptyList()
+        viewModel = OnboardingViewModel(qrValidator, repository, deviceIdentity, SavedStateHandle())
     }
 
     @After fun tearDown() { Dispatchers.resetMain() }
