@@ -8,6 +8,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -15,7 +16,6 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.srbr.huginn.ui.components.HuginnCard
 import com.srbr.huginn.ui.components.NfcRipple
@@ -40,7 +40,7 @@ fun CardScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .then(Modifier.systemBarsPadding()),
+            .systemBarsPadding(),
         contentAlignment = Alignment.Center
     ) {
         // NFC ripple behind card
@@ -66,11 +66,13 @@ fun CardScreen(
             Spacer(modifier = Modifier.height(40.dp))
 
             // Card
-            HuginnCard(
-                card        = state.card,
-                displayId   = state.displayId,
-                isUnlocked  = state.isUnlocked
-            )
+            state.card?.let { card ->
+                HuginnCard(
+                    card        = card,
+                    displayId   = state.displayId,
+                    isUnlocked  = state.isUnlocked
+                )
+            }
 
             Spacer(modifier = Modifier.height(40.dp))
 
@@ -125,10 +127,10 @@ fun CardScreen(
                     modifier = Modifier.width(280.dp)
                 ) {
                     LinearProgressIndicator(
-                        progress         = { state.countdownPct },
-                        modifier         = Modifier.fillMaxWidth().height(4.dp),
-                        color            = SuccessGreen,
-                        trackColor       = Color.White.copy(alpha = 0.1f)
+                        progress = { state.countdownPct },
+                        modifier = Modifier.fillMaxWidth().height(4.dp),
+                        color    = SuccessGreen,
+                        trackColor = Color.White.copy(alpha = 0.1f)
                     )
                     Spacer(modifier = Modifier.height(10.dp))
                     Text(

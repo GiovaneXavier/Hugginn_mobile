@@ -17,21 +17,24 @@ class HuginnHCEService : HostApduService() {
         @JvmStatic @Volatile var isAuthorized:    Boolean     = false
         @JvmStatic @Volatile var authorizedUntil: Long        = 0L
         @JvmStatic @Volatile var activeCard:      HuginnCard? = null
-        @JvmStatic @Volatile var deviceId:        String      = ""
+        @JvmStatic @Volatile var activeDeviceId:  String      = ""
     }
 
     override fun processCommandApdu(commandApdu: ByteArray, extras: Bundle?): ByteArray {
-        if (!commandApdu.startsWith(SELECT_HEADER)) return SW_UNKNOWN
+        if (commandApdu == null || !commandApdu.startsWith(SELECT_HEADER)) return SW_UNKNOWN
 
         val now = System.currentTimeMillis()
-        if (!isAuthorized || now > authorizedUntil || activeCard == null || deviceId.isEmpty()) {
-            Log.d(TAG, "Not authorized")
+        val currentCard = activeCard
+        val devId = activeDeviceId
+
+        if (!isAuthorized || now > authorizedUntil || currentCard == null || devId == "") {
+            Log.d(TAG, "Not authorized or deviceId empty")
             isAuthorized = false
             return SW_NOT_ALLOWED
         }
 
         return try {
-            val token = NfcTokenGenerator().generate(activeCard!!, deviceId)
+            val token = NfcTokenGenerator().generate(currentCard, devId)
             Log.d(TAG, "Sending signed token")
             token.toByteArray(Charsets.UTF_8) + SW_OK
         } catch (e: Exception) {
@@ -41,23 +44,22 @@ class HuginnHCEService : HostApduService() {
     }
 
     override fun onDeactivated(reason: Int) {
-        // reason 0 = DEACTIVATION_LINK_LOSS  (field removed)
-        // reason 1 = DEACTIVATION_DESELECTED (reader selected different AID)
-        // reason 2 = DEACTIVATION_OBSERVE_MODE (API 34+ — another service taking priority;
-        //            re-activation may follow in the same session, keep authorization intact)
-        Log.d(TAG, "HCE deactivated: reason=$reason${if (reason == 2) " (observe mode)" else ""}")
+        Log.d(TAG, "HCE deactivated: reason=$reason")
     }
 
     override fun onDestroy() {
         isAuthorized = false
         authorizedUntil = 0L
         activeCard = null
-        deviceId = ""
+        activeDeviceId = ""
         super.onDestroy()
     }
 
     private fun ByteArray.startsWith(prefix: ByteArray): Boolean {
         if (size < prefix.size) return false
-        return prefix.indices.all { this[it] == prefix[it] }
+        for (i in prefix.indices) {
+            if (this[i] != prefix[i]) return false
+        }
+        return true
     }
 }

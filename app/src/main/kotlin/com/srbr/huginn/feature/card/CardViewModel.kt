@@ -52,8 +52,8 @@ class CardViewModel @Inject constructor(
             )
         }
         if (card != null) {
-            HuginnHCEService.deviceId   = deviceIdentity.getDeviceId()
-            HuginnHCEService.activeCard = card
+            HuginnHCEService.activeDeviceId = deviceIdentity.getDeviceId()
+            HuginnHCEService.activeCard     = card
         }
     }
 
