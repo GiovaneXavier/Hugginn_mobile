@@ -2,6 +2,50 @@
 
 Este arquivo orienta o Claude Code ao trabalhar neste repositório.
 
+## Pré-requisitos de Build — Restrições Obrigatórias
+
+> Estas versões foram estabilizadas após falha de compilação causada por dependências experimentais.
+> **Não atualize nenhuma delas sem validar a compatibilidade entre si.**
+
+| Componente | Versão fixada | Motivo |
+|---|---|---|
+| Android Gradle Plugin (AGP) | **8.7.2** | AGP 9.x ainda experimental; incompatível com Hilt 2.5x |
+| Kotlin | **2.0.21** | Kotlin 2.2.x experimental; incompatível com kapt nesta stack |
+| Hilt | **2.52** | Versão mínima que resolve conflitos com AGP 8.7 |
+| Kotlin Compose Plugin | **2.0.21** | Deve ser igual à versão do Kotlin |
+| lifecycle-runtime-compose | **2.7.0** | `LocalLifecycleOwner` moveu de package na 2.8+; usar import de `androidx.compose.ui.platform` |
+
+### Regras para manter o build funcional
+
+1. **Ordem dos plugins em `app/build.gradle`** — sempre nesta sequência:
+   ```groovy
+   id 'com.android.application'
+   id 'org.jetbrains.kotlin.android'
+   id 'kotlin-kapt'                   // ANTES do hilt
+   id 'com.google.dagger.hilt.android'
+   id 'org.jetbrains.kotlin.plugin.compose'
+   ```
+   `kotlin-kapt` deve preceder o Hilt para que os stubs de annotation processing estejam disponíveis.
+
+2. **Artefato correto do Hilt** — usar `hilt-android-compiler`, não `hilt-compiler`:
+   ```groovy
+   kapt 'com.google.dagger:hilt-android-compiler:2.52'
+   ```
+
+3. **JVM signature clash** — em classes Kotlin com Hilt `@Inject`, evite ter uma `val` privada com o mesmo nome que uma `fun get<Nome>()`. O compilador gera métodos com assinaturas idênticas na JVM. Padrão adotado: sufixo `Identifier` na propriedade privada (ex.: `deviceIdentifier` + `getDeviceId()`).
+
+4. **`LocalLifecycleOwner` no Compose** — com `lifecycle-compose:2.7.0`, importar de:
+   ```kotlin
+   import androidx.compose.ui.platform.LocalLifecycleOwner  // correto para 2.7.x
+   // NÃO: import androidx.lifecycle.compose.LocalLifecycleOwner (2.8+)
+   ```
+
+5. **Heap do Gradle** — `gradle.properties` já configura `-Xmx4g`. Não reduzir; o merge de dex com ML Kit estoura com menos memória.
+
+6. **`@Volatile` em todos os campos do companion object de `HuginnHCEService`** — a thread NFC lê esses campos enquanto a main thread escreve. Remover `@Volatile` introduz race condition silenciosa.
+
+---
+
 ## Comandos de Build e Teste
 
 ```bash
