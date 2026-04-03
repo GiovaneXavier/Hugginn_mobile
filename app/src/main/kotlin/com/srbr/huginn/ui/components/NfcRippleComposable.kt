@@ -10,14 +10,18 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 private const val RING_COUNT = 3
 
 /**
- * NFC ripple animation — 3 expanding rings, each staggered.
- * Rendered entirely with Compose Canvas — no custom View needed.
+ * Ondas NFC — 3 anéis expandindo com stagger de 800ms.
+ *
+ * [centerFractionY] define em qual fração da altura do Canvas o centro
+ * das ondas será desenhado: 0f = topo, 0.5f = centro, 1f = base.
+ * Padrão 0.5f (centro).
  */
 @Composable
 fun NfcRipple(
-    visible:  Boolean,
-    modifier: Modifier = Modifier,
-    color:    Color    = Color(0xFF1428A0)
+    visible:         Boolean,
+    modifier:        Modifier = Modifier,
+    color:           Color    = Color(0xFF1428A0),
+    centerFractionY: Float    = 0.5f
 ) {
     if (!visible) return
 
@@ -37,7 +41,7 @@ fun NfcRipple(
 
     Canvas(modifier = modifier) {
         val cx        = size.width  / 2f
-        val cy        = size.height / 2f
+        val cy        = size.height * centerFractionY
         val maxRadius = minOf(size.width, size.height) / 2f * 0.85f
         val minRadius = maxRadius * 0.25f
 
