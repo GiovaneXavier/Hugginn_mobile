@@ -98,8 +98,10 @@ class OnboardingViewModel @Inject constructor(
                     }
                     delay(800)
 
-                    repository.markNonceUsed(card.nonce)
-                    repository.saveCard(card)
+                    withContext(Dispatchers.IO) {
+                        repository.markNonceUsed(card.nonce)
+                        repository.saveCard(card)
+                    }
                     val totalCards = withContext(Dispatchers.IO) { repository.getCards().size }
 
                     _state.update { it.copy(step = OnboardingStep.Success(card, deviceIdentity.getDisplayId(), totalCards)) }

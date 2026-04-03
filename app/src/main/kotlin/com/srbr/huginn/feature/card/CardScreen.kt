@@ -37,6 +37,14 @@ fun CardScreen(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
+    // Show loading indicator while card hasn't loaded yet
+    if (!state.hasLoaded) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = SamsungBlue)
+        }
+        return
+    }
+
     Box(
         modifier = Modifier
             .fillMaxSize()

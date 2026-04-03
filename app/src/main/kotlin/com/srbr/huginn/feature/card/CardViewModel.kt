@@ -24,7 +24,8 @@ data class CardUiState(
     val isUnlocked:    Boolean     = false,
     val countdown:     Int         = 0,       // seconds remaining
     val countdownPct:  Float       = 0f,      // 0..1 for progress bar
-    val hasCard:       Boolean     = false
+    val hasCard:       Boolean     = false,
+    val hasLoaded:     Boolean     = false    // true once loadCard() completes
 )
 
 @HiltViewModel
@@ -51,7 +52,8 @@ class CardViewModel @Inject constructor(
             it.copy(
                 card      = card,
                 displayId = deviceIdentity.getDisplayId(),
-                hasCard   = card != null
+                hasCard   = card != null,
+                hasLoaded = true
             )
         }
         if (card != null) {
