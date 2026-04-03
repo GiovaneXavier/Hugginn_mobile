@@ -18,17 +18,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.srbr.huginn.core.security.HuginnCard
 import com.srbr.huginn.ui.theme.*
+import kotlinx.coroutines.launch
 
-private const val UNLOCKED_ROTATION = 22f  // graus de inclinação quando desbloqueado
+private const val TILT_TARGET   = 18f  // ângulo final quando desbloqueado
+private const val TILT_OVERSHOOT = 23f  // ultrapassa levemente antes de assentar
 
 /**
- * Card de credencial com face única.
+ * Card de credencial com face única — animação estilo Samsung Wallet.
  *
- * Quando desbloqueado:
- *  - Inclina UNLOCKED_ROTATION° no eixo Y com spring (overshoot + retorno suave)
- *  - Escala sobe 20% (1.2x)
- *  - Revela token e troca badge SRBR → ATIVO
- *  - Ao expirar (30s), reverte tudo para 0°
+ * Desbloqueado:
+ *  - Inclina até TILT_OVERSHOOT° (rápido), recua para TILT_TARGET° (suave)
+ *  - Sem oscilação — movimento único, limpo
+ *  - Escala sobe 20% em paralelo
+ *  - Ao expirar, reverte suavemente para 0°
  */
 @Composable
 fun HuginnCard(
@@ -38,24 +40,23 @@ fun HuginnCard(
     modifier:            Modifier = Modifier,
     onAnimationComplete: () -> Unit = {}
 ) {
-    // Spring: vai até o ângulo alvo, passa um pouco (overshoot) e volta
-    val springSpec = spring<Float>(
-        dampingRatio = Spring.DampingRatioMediumBouncy,
-        stiffness    = Spring.StiffnessMediumLow
-    )
+    val rotAnim   = remember { Animatable(0f) }
+    val scaleAnim = remember { Animatable(1f) }
+    var initialized by remember { mutableStateOf(false) }
 
-    val rotation by animateFloatAsState(
-        targetValue      = if (isUnlocked) UNLOCKED_ROTATION else 0f,
-        animationSpec    = springSpec,
-        finishedListener = { if (isUnlocked) onAnimationComplete() },
-        label            = "cardTilt"
-    )
-
-    val scale by animateFloatAsState(
-        targetValue   = if (isUnlocked) 1.2f else 1f,
-        animationSpec = springSpec,
-        label         = "cardScale"
-    )
+    LaunchedEffect(isUnlocked) {
+        if (!initialized) { initialized = true; return@LaunchedEffect }
+        if (isUnlocked) {
+            launch { scaleAnim.animateTo(1.2f, tween(420, easing = FastOutSlowInEasing)) }
+            // Vai rápido até o overshoot, recua suave para o ângulo final
+            rotAnim.animateTo(TILT_OVERSHOOT, tween(300, easing = FastOutLinearInEasing))
+            rotAnim.animateTo(TILT_TARGET,    tween(180, easing = LinearOutSlowInEasing))
+            onAnimationComplete()
+        } else {
+            launch { scaleAnim.animateTo(1f, tween(380, easing = FastOutSlowInEasing)) }
+            rotAnim.animateTo(0f, tween(400, easing = FastOutSlowInEasing))
+        }
+    }
 
     val cardColor = remember(card?.cardColor) {
         runCatching {
@@ -68,10 +69,10 @@ fun HuginnCard(
             .width(320.dp)
             .height(200.dp)
             .graphicsLayer {
-                rotationY      = rotation
-                scaleX         = scale
-                scaleY         = scale
-                cameraDistance = 8f * density   // câmera mais próxima = perspectiva mais dramática
+                rotationY      = rotAnim.value
+                scaleX         = scaleAnim.value
+                scaleY         = scaleAnim.value
+                cameraDistance = 8f * density
             }
             .clip(RoundedCornerShape(20.dp))
             .background(Brush.linearGradient(listOf(cardColor, SamsungBlueLight)))
