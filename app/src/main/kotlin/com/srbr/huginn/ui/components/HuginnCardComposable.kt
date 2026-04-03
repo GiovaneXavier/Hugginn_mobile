@@ -18,17 +18,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.srbr.huginn.core.security.HuginnCard
 import com.srbr.huginn.ui.theme.*
-import kotlinx.coroutines.launch
+
+private const val UNLOCKED_ROTATION = 22f  // graus de inclinação quando desbloqueado
 
 /**
  * Card de credencial com face única.
  *
  * Quando desbloqueado:
- *  - Gira até 90° no eixo Y (fica de lado / invisível)
- *  - Troca o conteúdo (token revelado, badge ATIVO) enquanto está de lado
- *  - Spring de volta a 0° com overshoot suave
- *  - Escala sobe 20% durante o estado desbloqueado
- *  - Ao travar novamente, reverte tudo
+ *  - Inclina UNLOCKED_ROTATION° no eixo Y com spring (overshoot + retorno suave)
+ *  - Escala sobe 20% (1.2x)
+ *  - Revela token e troca badge SRBR → ATIVO
+ *  - Ao expirar (30s), reverte tudo para 0°
  */
 @Composable
 fun HuginnCard(
@@ -38,44 +38,24 @@ fun HuginnCard(
     modifier:            Modifier = Modifier,
     onAnimationComplete: () -> Unit = {}
 ) {
-    val rotAnim   = remember { Animatable(0f) }
-    val scaleAnim = remember { Animatable(1f) }
+    // Spring: vai até o ângulo alvo, passa um pouco (overshoot) e volta
+    val springSpec = spring<Float>(
+        dampingRatio = Spring.DampingRatioMediumBouncy,
+        stiffness    = Spring.StiffnessMediumLow
+    )
 
-    // Controla qual conteúdo mostrar (troca enquanto o cartão está de lado)
-    var showUnlocked by remember { mutableStateOf(false) }
-    // Evita rodar animação na composição inicial
-    var initialized  by remember { mutableStateOf(false) }
+    val rotation by animateFloatAsState(
+        targetValue      = if (isUnlocked) UNLOCKED_ROTATION else 0f,
+        animationSpec    = springSpec,
+        finishedListener = { if (isUnlocked) onAnimationComplete() },
+        label            = "cardTilt"
+    )
 
-    LaunchedEffect(isUnlocked) {
-        if (!initialized) {
-            initialized = true
-            return@LaunchedEffect
-        }
-        if (isUnlocked) {
-            // Scale sobe + gira até 90° (fica de lado) em paralelo
-            launch { scaleAnim.animateTo(1.2f, tween(320, easing = FastOutSlowInEasing)) }
-            rotAnim.animateTo(90f, tween(200, easing = FastOutLinearInEasing))
-
-            // Troca conteúdo enquanto o cartão está invisível (90°)
-            showUnlocked = true
-
-            // Spring de volta a 0° com overshoot — "passa um pouco e volta"
-            rotAnim.animateTo(
-                targetValue   = 0f,
-                animationSpec = spring(
-                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                    stiffness    = Spring.StiffnessMediumLow
-                )
-            )
-            onAnimationComplete()
-        } else {
-            // Reverte: gira para fora até 90°, troca, volta suave
-            launch { scaleAnim.animateTo(1f, tween(300, easing = FastOutSlowInEasing)) }
-            rotAnim.animateTo(90f, tween(180, easing = FastOutLinearInEasing))
-            showUnlocked = false
-            rotAnim.animateTo(0f, tween(220, easing = LinearOutSlowInEasing))
-        }
-    }
+    val scale by animateFloatAsState(
+        targetValue   = if (isUnlocked) 1.2f else 1f,
+        animationSpec = springSpec,
+        label         = "cardScale"
+    )
 
     val cardColor = remember(card?.cardColor) {
         runCatching {
@@ -88,10 +68,10 @@ fun HuginnCard(
             .width(320.dp)
             .height(200.dp)
             .graphicsLayer {
-                rotationY      = rotAnim.value
-                scaleX         = scaleAnim.value
-                scaleY         = scaleAnim.value
-                cameraDistance = 12f * density
+                rotationY      = rotation
+                scaleX         = scale
+                scaleY         = scale
+                cameraDistance = 8f * density   // câmera mais próxima = perspectiva mais dramática
             }
             .clip(RoundedCornerShape(20.dp))
             .background(Brush.linearGradient(listOf(cardColor, SamsungBlueLight)))
@@ -114,7 +94,7 @@ fun HuginnCard(
         }
 
         // Centro: nome do funcionário — aparece quando desbloqueado
-        if (showUnlocked && card != null) {
+        if (isUnlocked && card != null) {
             Box(
                 modifier         = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
@@ -142,12 +122,12 @@ fun HuginnCard(
                 verticalAlignment     = Alignment.CenterVertically
             ) {
                 Text(
-                    text       = if (showUnlocked) displayId else "SRBR-••••-••••",
+                    text       = if (isUnlocked) displayId else "SRBR-••••-••••",
                     fontFamily = FontFamily.Monospace,
                     fontSize   = 13.sp,
-                    color      = Color.White.copy(alpha = if (showUnlocked) 0.85f else 0.5f)
+                    color      = Color.White.copy(alpha = if (isUnlocked) 0.85f else 0.5f)
                 )
-                CardBadge(isUnlocked = showUnlocked)
+                CardBadge(isUnlocked = isUnlocked)
             }
         }
     }
