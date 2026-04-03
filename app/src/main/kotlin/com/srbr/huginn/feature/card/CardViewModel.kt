@@ -46,8 +46,8 @@ class CardViewModel @Inject constructor(
     }
 
     private suspend fun loadCard() {
-        val systemId = savedStateHandle.get<String>("systemId") ?: return
-        val card = repository.getCard(systemId)
+        val systemId = savedStateHandle.get<String>("systemId")
+        val card = systemId?.let { repository.getCard(it) }
         _state.update {
             it.copy(
                 card      = card,
