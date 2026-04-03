@@ -48,6 +48,7 @@ class MainActivity : AppCompatActivity() {
     private var onQRResult: ((String) -> Unit)? = null
     private var onCameraPermissionDenied: (() -> Unit)? = null
     private var onCameraUnavailable: (() -> Unit)? = null
+    private var pendingSurfaceProvider: Preview.SurfaceProvider? = null
     private var isAnalyzing = false
     private var activeCameraProvider: ProcessCameraProvider? = null
 
@@ -86,7 +87,8 @@ class MainActivity : AppCompatActivity() {
                         HuginnNavGraph(
                             startDestination   = dest,
                             onRequestBiometric = ::requestBiometric,
-                            onRequestCamera    = { onQR, onDenied, onUnavailable ->
+                            onRequestCamera    = { surfaceProvider, onQR, onDenied, onUnavailable ->
+                                pendingSurfaceProvider = surfaceProvider
                                 onQRResult = onQR
                                 onCameraPermissionDenied = onDenied
                                 onCameraUnavailable = onUnavailable
@@ -138,6 +140,7 @@ class MainActivity : AppCompatActivity() {
         isAnalyzing = false
         activeCameraProvider?.unbindAll()
         activeCameraProvider = null
+        pendingSurfaceProvider = null
     }
 
     @OptIn(ExperimentalGetImage::class)
@@ -176,7 +179,13 @@ class MainActivity : AppCompatActivity() {
                 }
             try {
                 provider.unbindAll()
-                provider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, analysis)
+                val useCases = buildList {
+                    add(analysis)
+                    pendingSurfaceProvider?.let { sp ->
+                        add(Preview.Builder().build().also { it.setSurfaceProvider(sp) })
+                    }
+                }
+                provider.bindToLifecycle(this, CameraSelector.DEFAULT_BACK_CAMERA, *useCases.toTypedArray())
             } catch (e: Exception) {
                 Log.e("MainActivity", "Camera bind failed: ${e.message}")
                 activeCameraProvider = null

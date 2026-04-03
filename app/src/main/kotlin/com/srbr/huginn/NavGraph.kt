@@ -1,6 +1,7 @@
 package com.srbr.huginn
 
 import android.net.Uri
+import androidx.camera.core.Preview
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -26,7 +27,7 @@ fun HuginnNavGraph(
     startDestination:    String,
     navController:       NavHostController = rememberNavController(),
     onRequestBiometric:  (onSuccess: () -> Unit) -> Unit,
-    onRequestCamera:     (onQRDetected: (String) -> Unit, onPermissionDenied: () -> Unit, onUnavailable: () -> Unit) -> Unit,
+    onRequestCamera:     (surfaceProvider: Preview.SurfaceProvider, onQRDetected: (String) -> Unit, onPermissionDenied: () -> Unit, onUnavailable: () -> Unit) -> Unit,
     onStopCamera:        () -> Unit
 ) {
     NavHost(
