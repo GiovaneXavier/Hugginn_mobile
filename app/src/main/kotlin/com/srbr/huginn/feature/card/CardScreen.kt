@@ -1,5 +1,7 @@
 package com.srbr.huginn.feature.card
 
+import android.os.VibrationEffect
+import android.os.Vibrator
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
@@ -14,6 +16,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.text.font.FontWeight
@@ -39,6 +42,22 @@ fun CardScreen(
     BackHandler {
         viewModel.onExpire()
         onBack()
+    }
+
+    // Vibração suave enquanto NFC está ativo — pulso de 25ms a cada 2,5s
+    val context = LocalContext.current
+    val vibrator = remember { context.getSystemService(Vibrator::class.java) }
+    LaunchedEffect(state.isUnlocked) {
+        if (state.isUnlocked) {
+            vibrator?.vibrate(
+                VibrationEffect.createWaveform(longArrayOf(0, 25, 2500), 1)
+            )
+        } else {
+            vibrator?.cancel()
+        }
+    }
+    DisposableEffect(Unit) {
+        onDispose { vibrator?.cancel() }
     }
 
     val lifecycleOwner = LocalLifecycleOwner.current
