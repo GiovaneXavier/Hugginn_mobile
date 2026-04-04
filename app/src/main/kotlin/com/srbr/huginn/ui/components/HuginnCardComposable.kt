@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 
 // Spring com chicote: um único overshoot e assenta — sem múltiplas oscilações
 private val WhipSpring = spring<Float>(
-    dampingRatio = 0.5f,
+    dampingRatio = 0.72f,
     stiffness    = Spring.StiffnessMedium
 )
 

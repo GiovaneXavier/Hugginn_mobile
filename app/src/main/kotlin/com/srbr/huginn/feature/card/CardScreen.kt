@@ -88,7 +88,7 @@ fun CardScreen(
                 letterSpacing = 2.sp,
                 fontWeight    = FontWeight.SemiBold
             )
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Cartão
             state.card?.let { card ->
@@ -107,7 +107,7 @@ fun CardScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(40.dp))
+            Spacer(modifier = Modifier.height(80.dp))
 
             // Status
             AnimatedContent(
