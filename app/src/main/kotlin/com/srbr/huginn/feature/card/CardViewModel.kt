@@ -47,7 +47,10 @@ class CardViewModel @Inject constructor(
 
     private suspend fun loadCard() {
         val systemId = savedStateHandle.get<String>("systemId")
-        val card = systemId?.let { repository.getCard(it) }
+        // systemId pode ser null quando a tela é o startDestination direto da MainActivity
+        // (Navigation nem sempre injeta path args no SavedStateHandle nesse caso)
+        val card = if (systemId != null) repository.getCard(systemId)
+                   else repository.getCards().firstOrNull()
         _state.update {
             it.copy(
                 card      = card,
