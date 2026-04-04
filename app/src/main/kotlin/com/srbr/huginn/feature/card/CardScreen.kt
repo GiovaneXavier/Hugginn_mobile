@@ -39,12 +39,12 @@ fun CardScreen(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
 
+    // Se desbloqueado: trava o cartão e fica na tela. Se bloqueado: navega para trás.
     BackHandler {
-        viewModel.onExpire()
-        onBack()
+        if (state.isUnlocked) viewModel.onExpire() else onBack()
     }
 
-    // Vibração suave enquanto NFC está ativo — pulso de 25ms a cada 2,5s
+    // Vibração suave enquanto NFC está ativo
     val context = LocalContext.current
     val vibrator = remember { context.getSystemService(Vibrator::class.java) }
     LaunchedEffect(state.isUnlocked) {
@@ -63,7 +63,10 @@ fun CardScreen(
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_STOP) viewModel.onAppBackground()
+            if (event == Lifecycle.Event.ON_STOP) {
+                viewModel.onAppBackground()
+                vibrator?.cancel() // cancela imediatamente sem aguardar recomposição
+            }
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
@@ -97,7 +100,7 @@ fun CardScreen(
     ) {
         // Botão voltar — topo esquerdo
         IconButton(
-            onClick  = { viewModel.onExpire(); onBack() },
+            onClick  = { if (state.isUnlocked) viewModel.onExpire() else onBack() },
             modifier = Modifier.align(Alignment.TopStart)
         ) {
             Icon(
