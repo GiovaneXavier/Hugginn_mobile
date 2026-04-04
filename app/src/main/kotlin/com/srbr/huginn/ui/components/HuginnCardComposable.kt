@@ -20,10 +20,10 @@ import com.srbr.huginn.core.security.HuginnCard
 import com.srbr.huginn.ui.theme.*
 import kotlinx.coroutines.launch
 
-// Spring com chicote: um único overshoot e assenta — sem múltiplas oscilações
-private val WhipSpring = spring<Float>(
-    dampingRatio = 0.72f,
-    stiffness    = Spring.StiffnessMedium
+// Tween longo + bezier com overshoot suave — elegante, sem parecer mecânico
+private val ElegantWhip = tween<Float>(
+    durationMillis = 900,
+    easing         = CubicBezierEasing(0.25f, 1.1f, 0.5f, 1.0f)
 )
 
 private const val ROT_TARGET = 90f  // rotação final: portrait (I)
@@ -52,8 +52,8 @@ fun HuginnCard(
     LaunchedEffect(isUnlocked) {
         if (!initialized) { initialized = true; return@LaunchedEffect }
         if (isUnlocked) {
-            launch { scaleAnim.animateTo(1.2f, WhipSpring) }
-            rotAnim.animateTo(ROT_TARGET, WhipSpring)
+            launch { scaleAnim.animateTo(1.2f, ElegantWhip) }
+            rotAnim.animateTo(ROT_TARGET, ElegantWhip)
             onAnimationComplete()
         } else {
             launch { scaleAnim.animateTo(1f, tween(400, easing = FastOutSlowInEasing)) }

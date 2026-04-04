@@ -58,7 +58,10 @@ fun HuginnNavGraph(
             route     = Routes.CARD,
             arguments = listOf(navArgument("systemId") { type = NavType.StringType })
         ) {
-            CardScreen(onRequestBiometric = onRequestBiometric)
+            CardScreen(
+                onRequestBiometric = onRequestBiometric,
+                onBack             = { navController.popBackStack() }
+            )
         }
     }
 }

@@ -1,8 +1,11 @@
 package com.srbr.huginn.feature.card
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -28,9 +31,15 @@ import com.srbr.huginn.ui.theme.*
 @Composable
 fun CardScreen(
     onRequestBiometric: (onSuccess: () -> Unit) -> Unit,
-    viewModel: CardViewModel = hiltViewModel()
+    onBack:             () -> Unit,
+    viewModel:          CardViewModel = hiltViewModel()
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+
+    BackHandler {
+        viewModel.onExpire()
+        onBack()
+    }
 
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
@@ -67,6 +76,18 @@ fun CardScreen(
             .systemBarsPadding(),
         contentAlignment = Alignment.Center
     ) {
+        // Botão voltar — topo esquerdo
+        IconButton(
+            onClick  = { viewModel.onExpire(); onBack() },
+            modifier = Modifier.align(Alignment.TopStart)
+        ) {
+            Icon(
+                imageVector        = Icons.AutoMirrored.Filled.ArrowBack,
+                contentDescription = "Voltar",
+                tint               = SubtleText
+            )
+        }
+
         // Ondas NFC — centradas no topo do cartão, aparecem após animação
         NfcRipple(
             visible         = rippleVisible,
