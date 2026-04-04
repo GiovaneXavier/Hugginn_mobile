@@ -20,19 +20,21 @@ import com.srbr.huginn.core.security.HuginnCard
 import com.srbr.huginn.ui.theme.*
 import kotlinx.coroutines.launch
 
-// Curva bezier com overshoot embutido — ultrapassa o alvo e retorna suavemente
-// em um único movimento contínuo (sem reversão de direção perceptível)
-private val OvershootEasing = CubicBezierEasing(0.34f, 1.56f, 0.64f, 1.0f)
+// Spring com chicote: um único overshoot e assenta — sem múltiplas oscilações
+private val WhipSpring = spring<Float>(
+    dampingRatio = 0.5f,
+    stiffness    = Spring.StiffnessMedium
+)
 
-private const val TILT_TARGET = 28f  // ângulo de repouso quando desbloqueado
+private const val ROT_TARGET = 90f  // rotação final: portrait (I)
 
 /**
  * Card de credencial com face única — animação estilo Samsung Wallet.
  *
  * Desbloqueado:
- *  - Uma única animação com easing que inclui overshoot: vai além de 28° e
- *    retorna suavemente — sem dois movimentos sequenciais que parecem flip
- *  - Escala sobe 15% em paralelo
+ *  - rotationZ de 0° (landscape, -) até 90° (portrait, I)
+ *  - Spring com overshoot: passa levemente de 90° e assenta (chicote)
+ *  - Escala sobe 20% em paralelo
  *  - Ao expirar, reverte suavemente para 0°
  */
 @Composable
@@ -50,13 +52,12 @@ fun HuginnCard(
     LaunchedEffect(isUnlocked) {
         if (!initialized) { initialized = true; return@LaunchedEffect }
         if (isUnlocked) {
-            // Movimento único — overshoot embutido no easing, sem reversão visível
-            launch { scaleAnim.animateTo(1.15f, tween(500, easing = OvershootEasing)) }
-            rotAnim.animateTo(TILT_TARGET, tween(500, easing = OvershootEasing))
+            launch { scaleAnim.animateTo(1.2f, WhipSpring) }
+            rotAnim.animateTo(ROT_TARGET, WhipSpring)
             onAnimationComplete()
         } else {
-            launch { scaleAnim.animateTo(1f, tween(350, easing = FastOutSlowInEasing)) }
-            rotAnim.animateTo(0f, tween(350, easing = FastOutSlowInEasing))
+            launch { scaleAnim.animateTo(1f, tween(400, easing = FastOutSlowInEasing)) }
+            rotAnim.animateTo(0f, tween(400, easing = FastOutSlowInEasing))
         }
     }
 
@@ -71,10 +72,9 @@ fun HuginnCard(
             .width(320.dp)
             .height(200.dp)
             .graphicsLayer {
-                rotationY      = rotAnim.value
-                scaleX         = scaleAnim.value
-                scaleY         = scaleAnim.value
-                cameraDistance = 10f * density
+                rotationZ = rotAnim.value
+                scaleX    = scaleAnim.value
+                scaleY    = scaleAnim.value
             }
             .clip(RoundedCornerShape(20.dp))
             .background(Brush.linearGradient(listOf(cardColor, SamsungBlueLight)))
