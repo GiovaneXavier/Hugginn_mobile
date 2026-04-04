@@ -50,7 +50,7 @@ fun CardScreen(
     LaunchedEffect(state.isUnlocked) {
         if (state.isUnlocked) {
             vibrator?.vibrate(
-                VibrationEffect.createWaveform(longArrayOf(0, 10, 1000), 1)
+                VibrationEffect.createWaveform(longArrayOf(0, 10, 1100), intArrayOf(0, 70, 0), 1)
             )
         } else {
             vibrator?.cancel()
