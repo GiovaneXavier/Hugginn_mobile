@@ -61,12 +61,6 @@ fun HuginnCard(
         }
     }
 
-    val cardColor = remember(card?.cardColor) {
-        runCatching {
-            Color(android.graphics.Color.parseColor(card?.cardColor ?: "#1428A0"))
-        }.getOrElse { SamsungBlue }
-    }
-
     Box(
         modifier = modifier
             .width(320.dp)
@@ -77,7 +71,9 @@ fun HuginnCard(
                 scaleY    = scaleAnim.value
             }
             .clip(RoundedCornerShape(20.dp))
-            .background(Brush.linearGradient(listOf(cardColor, SamsungBlueLight)))
+            .background(
+                Brush.linearGradient(listOf(Color(0xFF060D4A), SamsungBlue))
+            )
     ) {
         // Cabeçalho: "Samsung Research Brasil" + "Huginn"
         Column(modifier = Modifier.padding(20.dp)) {
