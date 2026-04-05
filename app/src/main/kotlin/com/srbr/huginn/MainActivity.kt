@@ -120,7 +120,7 @@ class MainActivity : AppCompatActivity() {
         prompt = BiometricPrompt(this, executor, callback)
         prompt.authenticate(
             BiometricPrompt.PromptInfo.Builder()
-                .setTitle("Huginn")
+                .setTitle("Hugginn")
                 .setSubtitle("Confirme sua identidade para liberar o NFC")
                 .setAllowedAuthenticators(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
                 .build()

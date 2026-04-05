@@ -96,7 +96,7 @@ private fun WelcomeStep(onStartScan: () -> Unit) {
         Spacer(modifier = Modifier.height(8.dp))
         Text("🐦", fontSize = 72.sp)
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Huginn", fontSize = 42.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
+        Text("Hugginn", fontSize = 42.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onBackground)
         Spacer(modifier = Modifier.height(12.dp))
         Text("Bem-vindo ao seu guardião de credenciais",
             fontSize = 14.sp, color = SubtleText, textAlign = TextAlign.Center)

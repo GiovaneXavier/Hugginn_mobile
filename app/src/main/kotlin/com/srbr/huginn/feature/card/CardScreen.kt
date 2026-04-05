@@ -125,7 +125,7 @@ fun CardScreen(
 
             // Label superior
             Text(
-                text          = "SRBR · HUGINN",
+                text          = "SRBR · HUGGINN",
                 fontSize      = 11.sp,
                 color         = SubtleText,
                 letterSpacing = 2.sp,

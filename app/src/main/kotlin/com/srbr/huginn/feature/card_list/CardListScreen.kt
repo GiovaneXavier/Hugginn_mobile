@@ -44,7 +44,7 @@ fun CardListScreen(
         )
         Spacer(modifier = Modifier.height(6.dp))
         Text(
-            text       = "Huginn",
+            text       = "Hugginn",
             fontSize   = 36.sp,
             fontWeight = FontWeight.Bold,
             color      = MaterialTheme.colorScheme.onBackground
