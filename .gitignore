@@ -13,3 +13,4 @@
 *.ap_
 *.hprof
 google-services.json
+.claude/
