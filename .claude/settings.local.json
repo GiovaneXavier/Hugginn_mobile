@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs cat:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(git merge:*)",
+      "Bash(git push:*)",
+      "Bash(./gradlew assembleDebug)",
+      "Bash(cmd /c \"gradlew.bat assembleDebug\")",
+      "Bash(cmd /c \"gradlew.bat assembleDebug 2>&1\")",
+      "Bash(powershell -Command \"Set-Location 'C:\\\\Projetos\\\\Projetos\\\\Hugginn_mobile'; .\\\\gradlew.bat assembleDebug 2>&1\")",
+      "Bash(where gradle:*)",
+      "Bash(where java:*)",
+      "Bash(GRADLE_BIN=\"$USERPROFILE/.gradle/wrapper/dists/gradle-8.13-bin/5xuhj0ry160q40clulazy9h7d/gradle-8.13/bin/gradle\")",
+      "Read(//c/Projetos/Projetos/Hugginn_mobile/**)",
+      "Bash(\"$USERPROFILE/.gradle/wrapper/dists/gradle-8.13-bin/5xuhj0ry160q40clulazy9h7d/gradle-8.13/bin/gradle\" wrapper:*)",
+      "Read(//c/Projetos/Projetos/Hugginn_mobile/$LOCALAPPDATA/**)",
+      "Read(//c/Projetos/Projetos/Hugginn_mobile/$APPDATA/Local/**)",
+      "Bash(export JAVA_HOME=\"C:/Users/giova/.jdks/jbr-17.0.14\")",
+      "WebSearch",
+      "Bash(ls:*)",
+      "Bash(./gradlew assembleDebug --stacktrace)",
+      "Bash(python3:*)",
+      "Bash(cmd //c \"gradlew.bat assembleDebug\")",
+      "Bash(JAVA_HOME=\"C:/Program Files/Eclipse Adoptium/jdk-17.0.13.11-hotspot\" bash gradlew assembleDebug)",
+      "Bash(JAVA_HOME=\"/c/Program Files/Android/Android Studio1/jbr\" bash gradlew assembleDebug)"
+    ]
+  }
+}
