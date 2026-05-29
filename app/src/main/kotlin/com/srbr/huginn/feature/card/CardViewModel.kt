@@ -1,114 +1,49 @@
 package com.srbr.huginn.feature.card
 
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.srbr.huginn.core.security.HuginnHCEService
+import com.srbr.huginn.credential.card.BaseCardViewModel
 import com.srbr.huginn.credential.security.DeviceIdentity
 import com.srbr.huginn.credential.security.HuginnCard
-import com.srbr.huginn.core.security.HuginnHCEService
 import com.srbr.huginn.credential.storage.CardRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-data class CardUiState(
-    val card:          HuginnCard? = null,
-    val displayId:     String      = "",
-    val isUnlocked:    Boolean     = false,
-    val countdown:     Int         = 0,       // seconds remaining
-    val countdownPct:  Float       = 0f,      // 0..1 for progress bar
-    val hasCard:       Boolean     = false,
-    val hasLoaded:     Boolean     = false    // true once loadCard() completes
-)
-
+/**
+ * Variante NFC: o desbloqueio autoriza o serviço HCE ([HuginnHCEService]) por 30s.
+ * Toda a máquina de estado (loadCard, countdown, auto-lock, background) vem de
+ * [BaseCardViewModel]; aqui só ficam os ganchos específicos do canal NFC.
+ */
 @HiltViewModel
 class CardViewModel @Inject constructor(
-    private val repository:       CardRepository,
-    private val deviceIdentity:   DeviceIdentity,
-    private val savedStateHandle: SavedStateHandle
-) : ViewModel() {
-
-    private val _state = MutableStateFlow(CardUiState())
-    val state: StateFlow<CardUiState> = _state.asStateFlow()
-
-    private var countdownJob: Job? = null
-    private val AUTH_WINDOW_SECS = 30
+    repository:       CardRepository,
+    deviceIdentity:   DeviceIdentity,
+    savedStateHandle: SavedStateHandle
+) : BaseCardViewModel(repository, deviceIdentity, savedStateHandle) {
 
     init {
+        // EncryptedSharedPreferences não deve bloquear a main thread.
         viewModelScope.launch(Dispatchers.IO) { loadCard() }
     }
 
-    private suspend fun loadCard() {
-        val systemId = savedStateHandle.get<String>("systemId")
-        // systemId pode ser null quando a tela é o startDestination direto da MainActivity
-        // (Navigation nem sempre injeta path args no SavedStateHandle nesse caso)
-        val card = if (systemId != null) repository.getCard(systemId)
-                   else repository.getCards().firstOrNull()
-        _state.update {
-            it.copy(
-                card      = card,
-                displayId = deviceIdentity.getDisplayId(),
-                hasCard   = card != null,
-                hasLoaded = true
-            )
-        }
-        if (card != null) {
-            HuginnHCEService.activeDeviceId = deviceIdentity.getDeviceId()
-            HuginnHCEService.activeCard     = card
-        }
+    /** Publica o cartão no serviço HCE assim que carregado. */
+    override fun onCardLoaded(card: HuginnCard) {
+        HuginnHCEService.activeDeviceId = deviceIdentity.getDeviceId()
+        HuginnHCEService.activeCard     = card
     }
 
-    /**
-     * Called by MainActivity after BiometricPrompt succeeds.
-     * Authorizes HCE and starts the 30s countdown.
-     */
-    fun onBiometricSuccess() {
+    /** Autoriza o HCE pela janela de 30s e desbloqueia o card. */
+    override suspend fun onUnlocked(card: HuginnCard) {
         HuginnHCEService.isAuthorized    = true
-        HuginnHCEService.authorizedUntil = System.currentTimeMillis() + AUTH_WINDOW_SECS * 1000L
-
-        _state.update { it.copy(isUnlocked = true, countdown = AUTH_WINDOW_SECS, countdownPct = 1f) }
-        startCountdown()
+        HuginnHCEService.authorizedUntil = System.currentTimeMillis() + authWindowSecs * 1000L
+        setUnlocked()
     }
 
-    private fun startCountdown() {
-        countdownJob?.cancel()
-        countdownJob = viewModelScope.launch {
-            for (remaining in AUTH_WINDOW_SECS downTo 0) {
-                _state.update {
-                    it.copy(
-                        countdown    = remaining,
-                        countdownPct = remaining.toFloat() / AUTH_WINDOW_SECS
-                    )
-                }
-                if (remaining == 0) {
-                    onExpire()
-                    return@launch
-                }
-                delay(1000)
-            }
-        }
-    }
-
-    fun onExpire() {
-        countdownJob?.cancel()
+    /** Revoga o HCE ao bloquear/expirar. */
+    override fun onLockedCleanup() {
         HuginnHCEService.isAuthorized = false
-        _state.update { it.copy(isUnlocked = false, countdown = 0, countdownPct = 0f) }
-    }
-
-    fun onAppBackground() {
-        if (_state.value.isUnlocked) onExpire()
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        HuginnHCEService.isAuthorized = false
-        countdownJob?.cancel()
     }
 }

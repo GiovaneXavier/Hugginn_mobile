@@ -11,7 +11,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.srbr.huginn.feature.card.CardScreen
 import com.srbr.huginn.feature.card_list.CardListScreen
-import com.srbr.huginn.feature.onboarding.OnboardingScreen
+import com.srbr.huginn.credential.onboarding.OnboardingScreen
 
 object Routes {
     const val ONBOARDING = "onboarding"
