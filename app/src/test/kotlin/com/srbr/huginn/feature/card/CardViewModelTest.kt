@@ -2,10 +2,10 @@ package com.srbr.huginn.feature.card
 
 import androidx.lifecycle.SavedStateHandle
 import app.cash.turbine.test
-import com.srbr.huginn.core.security.DeviceIdentity
-import com.srbr.huginn.core.security.HuginnCard
+import com.srbr.huginn.credential.security.DeviceIdentity
+import com.srbr.huginn.credential.security.HuginnCard
 import com.srbr.huginn.core.security.HuginnHCEService
-import com.srbr.huginn.core.storage.CardRepository
+import com.srbr.huginn.credential.storage.CardRepository
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -80,9 +80,9 @@ class CardViewModelTest {
     }
 
     @Test
-    fun `onBiometricSuccess authorizes HCE`() = runTest {
+    fun `onBiometricSuccess authorizes HCE`() = runTest(testDispatcher) {
         viewModel.onBiometricSuccess()
-        testDispatcher.scheduler.advanceUntilIdle()
+        runCurrent() // não usar advanceUntilIdle: rodaria o countdown até a auto-expiração
         assertTrue(HuginnHCEService.isAuthorized)
         assertTrue(HuginnHCEService.authorizedUntil > System.currentTimeMillis())
     }
@@ -113,27 +113,29 @@ class CardViewModelTest {
     }
 
     @Test
-    fun `countdown decrements over time`() = runTest {
+    fun `countdown decrements over time`() = runTest(testDispatcher) {
         viewModel.state.test {
             awaitItem()
             viewModel.onBiometricSuccess()
             val start = awaitItem()
             assertEquals(30, start.countdown)
 
-            testDispatcher.scheduler.advanceTimeBy(3000)
+            advanceTimeBy(3000)
+            runCurrent()
             val after3s = expectMostRecentItem()
             assertTrue(after3s.countdown <= 27)
         }
     }
 
     @Test
-    fun `countdown expires and locks automatically`() = runTest {
+    fun `countdown expires and locks automatically`() = runTest(testDispatcher) {
         viewModel.state.test {
             awaitItem()
             viewModel.onBiometricSuccess()
             awaitItem()
 
-            testDispatcher.scheduler.advanceTimeBy(31_000)
+            advanceTimeBy(31_000)
+            runCurrent()
             val expired = expectMostRecentItem()
             assertFalse(expired.isUnlocked)
             assertFalse(HuginnHCEService.isAuthorized)

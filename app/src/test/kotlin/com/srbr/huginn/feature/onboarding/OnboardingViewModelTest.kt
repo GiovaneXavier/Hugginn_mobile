@@ -1,10 +1,10 @@
 package com.srbr.huginn.feature.onboarding
 
 import app.cash.turbine.test
-import com.srbr.huginn.core.security.DeviceIdentity
-import com.srbr.huginn.core.security.HuginnCard
-import com.srbr.huginn.core.security.QRValidator
-import com.srbr.huginn.core.storage.CardRepository
+import com.srbr.huginn.credential.security.DeviceIdentity
+import com.srbr.huginn.credential.security.HuginnCard
+import com.srbr.huginn.credential.security.QRValidator
+import com.srbr.huginn.credential.storage.CardRepository
 import androidx.lifecycle.SavedStateHandle
 import io.mockk.*
 import kotlinx.coroutines.Dispatchers
@@ -40,6 +40,8 @@ class OnboardingViewModelTest {
         every { deviceIdentity.getDisplayId() } returns "SRBR-ABCD-1234"
         every { repository.getCards() } returns emptyList()
         viewModel = OnboardingViewModel(qrValidator, repository, deviceIdentity, SavedStateHandle())
+        viewModel.defaultDispatcher = testDispatcher
+        viewModel.ioDispatcher = testDispatcher
     }
 
     @After fun tearDown() { Dispatchers.resetMain() }

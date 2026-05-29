@@ -1,13 +1,22 @@
 package com.srbr.huginn.core.storage
 
+import android.content.Context
+import android.content.SharedPreferences
 import androidx.test.core.app.ApplicationProvider
-import com.srbr.huginn.core.security.HuginnCard
+import com.srbr.huginn.credential.security.HuginnCard
+import com.srbr.huginn.credential.storage.CardStorage
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
+
+/** Subclasse de testes que usa SharedPreferences não-criptografado (evita Keystore JVM). */
+private class TestCardStorage(context: Context) : CardStorage(context) {
+    override fun createPrefs(): SharedPreferences =
+        context.getSharedPreferences("huginn_test_store", Context.MODE_PRIVATE)
+}
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [33])
@@ -29,7 +38,7 @@ class CardStorageTest {
 
     @Before
     fun setup() {
-        storage = CardStorage(ApplicationProvider.getApplicationContext())
+        storage = TestCardStorage(ApplicationProvider.getApplicationContext())
         storage.deleteAllCards()  // estado limpo entre testes
     }
 

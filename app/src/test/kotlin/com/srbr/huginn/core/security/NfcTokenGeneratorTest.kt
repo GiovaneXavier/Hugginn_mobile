@@ -1,8 +1,6 @@
 package com.srbr.huginn.core.security
 
-import android.util.Base64
-import io.mockk.every
-import io.mockk.mockkStatic
+import com.srbr.huginn.credential.security.HuginnCard
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test

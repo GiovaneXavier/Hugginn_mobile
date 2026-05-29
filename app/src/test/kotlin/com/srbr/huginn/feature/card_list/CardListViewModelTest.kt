@@ -1,8 +1,8 @@
 package com.srbr.huginn.feature.card_list
 
 import app.cash.turbine.test
-import com.srbr.huginn.core.security.HuginnCard
-import com.srbr.huginn.core.storage.CardRepository
+import com.srbr.huginn.credential.security.HuginnCard
+import com.srbr.huginn.credential.storage.CardRepository
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
@@ -51,7 +51,7 @@ class CardListViewModelTest {
         Dispatchers.setMain(testDispatcher)
         repository = mockk(relaxed = true)
         every { repository.getCards() } returns fakeCards
-        viewModel = CardListViewModel(repository)
+        viewModel = CardListViewModel(repository, testDispatcher)
     }
 
     @After
