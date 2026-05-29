@@ -11,7 +11,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricPrompt
 import androidx.biometric.BiometricManager.Authenticators.BIOMETRIC_STRONG
-import androidx.biometric.BiometricManager.Authenticators.DEVICE_CREDENTIAL
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.compose.foundation.background
@@ -122,7 +121,10 @@ class MainActivity : AppCompatActivity() {
             BiometricPrompt.PromptInfo.Builder()
                 .setTitle("Hugginn")
                 .setSubtitle("Confirme sua identidade para liberar o NFC")
-                .setAllowedAuthenticators(BIOMETRIC_STRONG or DEVICE_CREDENTIAL)
+                // Apenas biometria forte — sem fallback para PIN/padrão do dispositivo.
+                .setAllowedAuthenticators(BIOMETRIC_STRONG)
+                // Obrigatório quando só BIOMETRIC_STRONG é permitido (sem DEVICE_CREDENTIAL).
+                .setNegativeButtonText("Cancelar")
                 .build()
         )
     }
