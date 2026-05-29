@@ -3,11 +3,12 @@ package com.srbr.huginn.feature.onboarding
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.srbr.huginn.core.security.DeviceIdentity
-import com.srbr.huginn.core.security.HuginnCard
-import com.srbr.huginn.core.security.QRValidator
-import com.srbr.huginn.core.storage.CardRepository
+import com.srbr.huginn.credential.security.DeviceIdentity
+import com.srbr.huginn.credential.security.HuginnCard
+import com.srbr.huginn.credential.security.QRValidator
+import com.srbr.huginn.credential.storage.CardRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,6 +41,10 @@ class OnboardingViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
+    // Dispatchers controláveis para testes determinísticos (produção usa Default/IO reais).
+    internal var defaultDispatcher: CoroutineDispatcher = Dispatchers.Default
+    internal var ioDispatcher: CoroutineDispatcher = Dispatchers.IO
+
     private companion object {
         const val KEY_ERROR_TITLE   = "onboarding_error_title"
         const val KEY_ERROR_MESSAGE = "onboarding_error_message"
@@ -69,7 +74,7 @@ class OnboardingViewModel @Inject constructor(
         viewModelScope.launch {
             delay(600) // brief UX feedback
 
-            val result = withContext(Dispatchers.Default) {
+            val result = withContext(defaultDispatcher) {
                 qrValidator.validate(content)
             }
 
@@ -98,11 +103,11 @@ class OnboardingViewModel @Inject constructor(
                     }
                     delay(800)
 
-                    withContext(Dispatchers.IO) {
+                    withContext(ioDispatcher) {
                         repository.markNonceUsed(card.nonce)
                         repository.saveCard(card)
                     }
-                    val totalCards = withContext(Dispatchers.IO) { repository.getCards().size }
+                    val totalCards = withContext(ioDispatcher) { repository.getCards().size }
 
                     _state.update { it.copy(step = OnboardingStep.Success(card, deviceIdentity.getDisplayId(), totalCards)) }
                 }

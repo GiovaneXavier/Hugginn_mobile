@@ -1,39 +1,42 @@
 package com.srbr.huginn.core.security
 
-import android.util.Base64
 import com.srbr.huginn.BuildConfig
-import java.security.SecureRandom
-import javax.crypto.Mac
-import javax.crypto.spec.SecretKeySpec
+import com.srbr.huginn.credential.security.HmacUtils
+import com.srbr.huginn.credential.security.HuginnCard
+import com.srbr.huginn.credential.security.NonceGenerator
+import com.srbr.huginn.credential.security.TokenPayload
 import javax.inject.Inject
 import javax.inject.Singleton
 
 /**
  * Gera tokens assinados com HMAC-SHA256 para transmissão via NFC/HCE.
  *
- * O formato do token é idêntico ao utilizado pelo QrTokenGenerator no app QR:
- *   deviceId|employeeId|systemId|timestamp|nonce.assinatura
+ * Formato (idêntico ao [QrTokenGenerator] do app QR):
  *
- * Isso garante que o backend Heimdall valide tokens NFC e QR
- * com exatamente a mesma lógica, sem alteração no servidor.
+ *     deviceId|employeeId|systemId|timestamp|nonce.assinatura
  *
- * A chave é lida diretamente de BuildConfig pois HuginnHCEService não é
- * injetado por Hilt (HostApduService tem limitações com Hilt).
+ * A montagem do payload, a geração do nonce e a assinatura HMAC vêm do módulo
+ * `:core-credential` ([TokenPayload], [NonceGenerator], [HmacUtils]) — qualquer
+ * mudança no contrato passa a ser feita num só lugar para os dois apps.
+ *
+ * A chave é lida de [BuildConfig] porque [HuginnHCEService] instancia este gerador
+ * fora do grafo do Hilt (limitação do `HostApduService`).
  */
 @Singleton
 class NfcTokenGenerator @Inject constructor() {
 
-    fun generate(card: HuginnCard, deviceId: String): String {
-        val ts    = System.currentTimeMillis() / 1000L
-        val nonce = SecureRandom().nextLong() and 0xFFFFFFL
-        val data  = "$deviceId|${card.employeeId}|${card.systemId}|$ts|$nonce"
+    private val nonceGenerator = NonceGenerator()
 
-        val mac = Mac.getInstance("HmacSHA256")
-        mac.init(SecretKeySpec(BuildConfig.TOKEN_HMAC_KEY.toByteArray(Charsets.UTF_8), "HmacSHA256"))
-        val sig = Base64.encodeToString(
-            mac.doFinal(data.toByteArray(Charsets.UTF_8)),
-            Base64.NO_WRAP or Base64.URL_SAFE or Base64.NO_PADDING
+    fun generate(card: HuginnCard, deviceId: String): String {
+        val payload = TokenPayload(
+            deviceId     = deviceId,
+            employeeId   = card.employeeId,
+            systemId     = card.systemId,
+            timestampSec = System.currentTimeMillis() / 1000L,
+            nonce        = nonceGenerator.generate()
         )
-        return "$data.$sig"
+        val canonical = payload.canonical()
+        val signature = HmacUtils.sign(canonical, BuildConfig.TOKEN_HMAC_KEY)
+        return "$canonical.$signature"
     }
 }

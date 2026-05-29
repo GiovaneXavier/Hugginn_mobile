@@ -3,6 +3,7 @@ package com.srbr.huginn.core.security
 import android.nfc.cardemulation.HostApduService
 import android.os.Bundle
 import android.util.Log
+import com.srbr.huginn.credential.security.HuginnCard
 
 class HuginnHCEService : HostApduService() {
 

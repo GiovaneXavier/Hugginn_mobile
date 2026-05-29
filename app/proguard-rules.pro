@@ -7,8 +7,8 @@
 # Keep HCE service
 -keep class com.srbr.huginn.core.security.HuginnHCEService { *; }
 
-# Keep data models for JSON serialization
--keep class com.srbr.huginn.core.security.HuginnCard { *; }
+# Keep data models for JSON serialization (moved to :core-credential)
+-keep class com.srbr.huginn.credential.security.HuginnCard { *; }
 
 # Keep Compose
 -keep class androidx.compose.** { *; }
