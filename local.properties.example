@@ -1,9 +1,11 @@
-# ── local.properties.example ──
-# Copy to local.properties and fill in your secrets.
-# NEVER commit local.properties to git.
+# Template — copiar para local.properties e preencher com as chaves reais
+# NUNCA commitar o local.properties preenchido
 
-sdk.dir=/path/to/android/sdk
+# Caminho do Android SDK (ajuste para seu ambiente)
+sdk.dir=C\:\\Users\\<usuario>\\AppData\\Local\\Android\\Sdk
 
-# HMAC secrets — must match the keys in odin-criar-cartao.html
-HUGINN_QR_HMAC_KEY=SRBR_HUGINN_ODIN_SECRET_2024
-HUGINN_TOKEN_HMAC_KEY=SRBR_HEIMDALL_TOKEN_SECRET_2024
+# Chaves HMAC — obter no secret manager corporativo
+# Sem essas chaves o build de release ABORTA (comportamento intencional).
+# Build de debug usa DEV_ONLY_FALLBACK_NEVER_RELEASE se ausentes.
+HUGINN_QR_HMAC_KEY=sua_chave_qr_aqui
+HUGINN_TOKEN_HMAC_KEY=sua_chave_token_aqui
