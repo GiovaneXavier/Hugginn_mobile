@@ -72,8 +72,9 @@ HUGINN_QR_HMAC_KEY=sua_chave_aqui
 HUGINN_TOKEN_HMAC_KEY=sua_chave_token_aqui
 ```
 
-Sem essas propriedades, o build usa os valores padrão de desenvolvimento
-(`SRBR_HUGINN_ODIN_SECRET_2024` e `SRBR_HEIMDALL_TOKEN_SECRET_2024`).
+Sem a chave, build de **release aborta** com `GradleException`. Build de debug usa
+`DEV_ONLY_FALLBACK_NEVER_RELEASE` (string explicitamente inválida para produção).
+Não existem mais fallbacks de chave de produção hardcoded — ver `BUILD_CICD.md §3.3`.
 
 ## Arquitetura
 
@@ -88,40 +89,35 @@ Sem essas propriedades, o build usa os valores padrão de desenvolvimento
 
 ### Estrutura de pacotes
 
+> **Modularização (Fase 1 concluída):** domínio, storage, onboarding e UI compartilhada
+> foram extraídos para `com.srbr.huginn:credential:0.3.0-SNAPSHOT` (repo `huginn-core-credential`).
+> Cada app contém apenas o que é específico ao seu canal de saída.
+
 ```
-core/security/     → Criptografia e modelos de domínio
-  HuginnCard         Data class da credencial
-  QRValidator        Valida QRs de registro (HMAC-SHA256, expiração, nonce)
-  NfcTokenGenerator  Gera tokens NFC: deviceId|empId|sysId|ts|nonce.sig
-  DeviceIdentity     SHA-256(salt + ANDROID_ID), exibido como "SRBR-XXXX-YYYY"
+# Neste repo (app-específico):
+core/security/
+  NfcTokenGenerator  Gera tokens NFC: usa TokenPayload + HmacUtils do :core-credential
   HuginnHCEService   Serviço NFC HCE; estado em companion object com @Volatile
 
-core/storage/      → Persistência criptografada
-  CardStorage        EncryptedSharedPreferences (AES-256-GCM) + rastreamento de nonces
-  CardRepository     Fachada sobre CardStorage (facilita mock nos testes)
+feature/card/
+  CardViewModel      herda BaseCardViewModel; onUnlocked() → autoriza HuginnHCEService
+  CardScreen         usa CardScreenScaffold com slot NfcRippleComposable / ROTATE_TO_PORTRAIT
 
-feature/onboarding/→ Fluxo de cadastro
-  OnboardingViewModel  sealed class OnboardingStep: Welcome → Scanning → Validating → Error | Success
-  OnboardingScreen     Câmera ML Kit, callbacks de permissão/erro da câmera
+di/AppModule.kt    → injeta QR_HMAC_KEY e TOKEN_HMAC_KEY via @Named para o :core-credential
+MainActivity.kt    → BiometricPrompt e navegação
+NavGraph.kt        → Compose Navigation
 
-feature/card/      → Exibição da credencial
-  CardViewModel      locked → (biometria) → unlocked 30 s + auto-lock ao expirar/background
-  CardScreen         DisposableEffect observa ON_STOP → onAppBackground()
-
-ui/components/     → Composables reutilizáveis
-  HuginnCardComposable  Card 3D com flip
-  NfcRippleComposable   Animação de ondas (1 rememberInfiniteTransition com múltiplos valores)
-
-di/AppModule.kt    → Hilt: provê QRValidator, NfcTokenGenerator, CardRepository, DeviceIdentity
-MainActivity.kt    → Orquestra câmera (ML Kit), BiometricPrompt e navegação
-NavGraph.kt        → Compose Navigation; passa callbacks de câmera/biometria
+# Em :core-credential (huginn-core-credential):
+  HuginnCard, QRValidator, DeviceIdentity, HmacUtils, Base64UrlCodec, NonceGenerator,
+  TokenPayload, CardStorage, CardRepository, OnboardingViewModel, OnboardingScreen,
+  HuginnCardComposable, BaseCardViewModel, CardScreenScaffold, ui/theme/
 ```
 
 ## Decisões Técnicas Importantes
 
 | Decisão | Motivo |
 |---|---|
-| `Base64.URL_SAFE or NO_WRAP or NO_PADDING` | JS strip padding; ambos os lados devem produzir 43 chars sem `=` |
+| `java.util.Base64` URL-safe sem padding via `Base64UrlCodec` (`:core-credential`) | Compatível com JVM pura em testes; `android.util.Base64` descontinuado neste uso |
 | `MessageDigest.isEqual()` para HMAC | Comparação em tempo constante; previne timing attacks |
 | `@Volatile` em todos os campos do companion object de `HuginnHCEService` | Thread NFC lê; main thread escreve — sem @Volatile há race condition |
 | `SecureRandom` para nonces | `kotlin.random.Random` não é criptograficamente seguro |
@@ -139,9 +135,10 @@ NavGraph.kt        → Compose Navigation; passa callbacks de câmera/biometria
 deviceId|employeeId|systemId|timestamp_unix|nonce.hmac-sha256-base64url
 ```
 - `timestamp` em segundos (Unix)
-- `nonce` = `SecureRandom().nextLong() and 0xFFFFFFL` (6 hex digits)
-- `hmac` = HMAC-SHA256 do payload antes do `.`, Base64url sem padding (43 chars)
-- Chave: `BuildConfig.TOKEN_HMAC_KEY`
+- `nonce` = `NonceGenerator.generate()` → **64 bits / 11 chars Base64url** (via `Base64UrlCodec.encode(8 bytes)`)
+- `hmac` = HMAC-SHA256 do payload antes do `.`, Base64url sem padding (43 chars) — via `HmacUtils.sign()`
+- Chave: `BuildConfig.TOKEN_HMAC_KEY` (injetada pelo Hilt; nunca hardcoded)
+- Fonte canônica: [INTEGRATION_GUIDE.md §2](../INTEGRATION_GUIDE.md#2-primitivas-criptográficas)
 
 ## Testes
 
